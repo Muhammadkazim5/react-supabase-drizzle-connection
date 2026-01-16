@@ -1,9 +1,5 @@
 import { useState, useEffect } from 'react'
 import { dbOperations } from './lib/db'
-import { supabase } from './lib/supabase'
-import type { User as SupabaseUser } from '@supabase/supabase-js'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 
 type NewUser = {
@@ -20,28 +16,12 @@ type User = {
 }
 
 function App() {
-  const [count, setCount] = useState(0)
   const [usersList, setUsersList] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
-  const [user, setUser] = useState<SupabaseUser | null>(null)
   const [formData, setFormData] = useState<NewUser>({ name: '', email: '' })
   const [formLoading, setFormLoading] = useState(false)
   const [formError, setFormError] = useState<string>('')
 
-  // Check for authenticated user
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-    }
-    getUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
 
   // Fetch users from database
   const fetchUsers = async () => {
@@ -98,50 +78,15 @@ function App() {
     setFormError('') // Clear error when user starts typing
   }
 
-  // Sign in with Supabase
-  const signIn = async () => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email: 'test@example.com',
-      password: 'password'
-    })
-    if (error) console.error('Error signing in:', error)
-  }
-
-  // Sign out
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) console.error('Error signing out:', error)
-  }
-
   useEffect(() => {
     fetchUsers()
   }, [])
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
       <h1>React + Supabase + Drizzle</h1>
 
       <div className="card">
-        <div style={{ marginBottom: '20px' }}>
-          <h3>Authentication</h3>
-          {user ? (
-            <div>
-              <p>Welcome, {user.email}!</p>
-              <button onClick={signOut}>Sign Out</button>
-            </div>
-          ) : (
-            <button onClick={signIn}>Sign In (Demo)</button>
-          )}
-        </div>
-
         <div style={{ marginBottom: '20px' }}>
           <h3>Create New User</h3>
           <form onSubmit={handleSubmit} style={{ marginBottom: '20px' }}>
@@ -215,17 +160,7 @@ function App() {
             <p>No users found. Create one above!</p>
           )}
         </div>
-
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
       </div>
-      <p className="read-the-docs">
-        Connected to Supabase with Drizzle ORM
-      </p>
     </>
   )
 }
